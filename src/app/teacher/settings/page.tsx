@@ -12,11 +12,13 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TeacherSettings() {
+  const { user } = useAuth();
   const [profile, setProfile] = useState({
-    name: 'Dr. Ramesh Kumar',
-    email: 'ramesh@college.edu',
+    name: user?.displayName || '',
+    email: user?.email || '',
     phone: '+91 98765 43210',
     subject: 'Mathematics',
     stream: 'MPC',
@@ -28,7 +30,7 @@ export default function TeacherSettings() {
   };
 
   return (
-    <DashboardLayout role="teacher" userName={profile.name} userEmail={profile.email}>
+    <DashboardLayout role="teacher">
       <div className="space-y-6 pb-20 lg:pb-8">
         <PageHeader title="Settings" description="Manage your profile and preferences">
           <Button onClick={handleSave} className="gap-2 rounded-xl gradient-primary border-0 text-white shadow-lg shadow-primary/25">

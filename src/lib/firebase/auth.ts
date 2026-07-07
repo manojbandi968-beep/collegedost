@@ -7,6 +7,7 @@ import {
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
+  signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User as FirebaseUser,
@@ -23,6 +24,13 @@ googleProvider.setCustomParameters({
 
 export async function signInWithGoogle(): Promise<FirebaseUser> {
   const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
+}
+
+// ---- Email/Password Sign-In ----
+
+export async function signInWithEmail(email: string, password: string): Promise<FirebaseUser> {
+  const result = await signInWithEmailAndPassword(auth, email, password);
   return result.user;
 }
 

@@ -44,7 +44,7 @@ import {
 } from 'recharts';
 import { getSocket } from '@/lib/socket/client';
 import { SOCKET_EVENTS, type TeacherActivityPayload, type QuizStartedPayload } from '@/lib/socket/events';
-import { getDocuments, subscribeToCollection, COLLECTIONS, whereClause, orderByClause } from '@/lib/firebase/firestore';
+import { getDocuments, subscribeToCollection, COLLECTIONS, whereClause } from '@/lib/firebase/firestore';
 
 const quizPerformanceData = [
   { subject: 'Maths', avg: 78 },

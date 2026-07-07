@@ -16,8 +16,10 @@ export default function TeacherProfilePage() {
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('+91 9876543210');
-  const [email, setEmail] = useState('teacher@collegedost.com');
+  const [phoneNumber] = useState('+91 9876543210');
+  const email = authUser?.email || '';
+  const displayName = authUser?.displayName || 'Teacher';
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
     <DashboardLayout role="teacher">
@@ -40,10 +42,10 @@ export default function TeacherProfilePage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4 rounded-xl bg-muted/50 p-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-xl font-bold text-primary">
-                    TK
+                    {initials}
                   </div>
                   <div>
-                    <p className="font-medium">Teacher</p>
+                    <p className="font-medium">{displayName}</p>
                     <p className="text-sm text-muted-foreground capitalize">Faculty Role</p>
                   </div>
                 </div>
@@ -128,7 +130,7 @@ export default function TeacherProfilePage() {
         </div>
       </div>
 
-      <PasswordChangeDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen} />
+      <PasswordChangeDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen} userEmail={email} userPhone={phoneNumber} />
       <PhoneNumberDialog open={phoneDialogOpen} onOpenChange={setPhoneDialogOpen} currentNumber={phoneNumber} />
       <EmailDialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen} currentEmail={email} userId={authUser?.uid} role={authUser?.role} />
     </DashboardLayout>

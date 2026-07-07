@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { type UserRole } from '@/types';
 import { signOut } from '@/lib/firebase/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -22,7 +23,6 @@ import {
   TEACHER_NAV_ITEMS,
   MENTOR_NAV_ITEMS,
 } from '@/lib/constants';
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
   role: UserRole;
@@ -34,13 +34,18 @@ interface DashboardLayoutProps {
 export function DashboardLayout({
   children,
   role,
-  userName = 'User',
-  userEmail = '',
-  userPhoto,
+  userName: propUserName,
+  userEmail: propUserEmail,
+  userPhoto: propUserPhoto,
 }: DashboardLayoutProps) {
   const router = useRouter();
+  const { user: authUser } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const userName = authUser?.displayName || propUserName || 'User';
+  const userEmail = authUser?.email || propUserEmail || '';
+  const userPhoto = propUserPhoto || authUser?.photoURL || undefined;
 
   const handleLogout = useCallback(async () => {
     try {

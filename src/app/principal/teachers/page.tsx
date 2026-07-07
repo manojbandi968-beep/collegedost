@@ -14,12 +14,14 @@ import {
   GraduationCap,
   Filter,
   RefreshCw,
+  Plus,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { StatCard } from '@/components/ui/stat-card';
@@ -62,6 +64,8 @@ interface Teacher {
   lastLogin?: string;
 }
 
+const emptyTeacher = { name: '', email: '', phone: '', subject: '', stream: '' as 'MPC' | 'BiPC' | 'CEC', status: 'pending' as AccountStatus, assignedSections: [] as string[] };
+
 const mockTeachers: Teacher[] = [
   { id: '1', name: 'Dr. Ramesh Kumar', email: 'ramesh@college.edu', phone: '+91 9876543210', subject: 'Mathematics', stream: 'MPC', status: 'approved', joinedDate: '2024-06-01', assignedSections: ['MPC-A', 'MPC-B', 'MPC-C'], lastLogin: '2025-07-05 09:15' },
   { id: '2', name: 'Prof. S. Lakshmi', email: 'lakshmi@college.edu', phone: '+91 9876543211', subject: 'Physics', stream: 'MPC', status: 'approved', joinedDate: '2024-06-01', assignedSections: ['MPC-A', 'MPC-B'], lastLogin: '2025-07-04 08:30' },
@@ -95,11 +99,13 @@ function StatusBadge({ status }: { status: AccountStatus }) {
 }
 
 export default function TeachersPage() {
-  const [teachers] = useState<Teacher[]>(mockTeachers);
+  const [teachers, setTeachers] = useState<Teacher[]>(mockTeachers);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterStream, setFilterStream] = useState<string>('all');
   const [confirmDialog, setConfirmDialog] = useState<{ type: 'approve' | 'reject' | 'disable' | 'enable'; teacher: Teacher } | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [form, setForm] = useState(emptyTeacher);
 
   const filtered = teachers.filter(t => {
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || t.email.toLowerCase().includes(search.toLowerCase());
@@ -128,6 +134,32 @@ export default function TeachersPage() {
     setConfirmDialog(null);
   };
 
+  const openAddDialog = () => {
+    setForm(emptyTeacher);
+    setAddDialogOpen(true);
+  };
+
+  const handleAddSave = () => {
+    if (!form.name || !form.email || !form.subject || !form.stream) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    const newTeacher: Teacher = {
+      id: String(Date.now()),
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      subject: form.subject,
+      stream: form.stream,
+      status: 'pending',
+      joinedDate: new Date().toISOString().slice(0, 10),
+      assignedSections: form.assignedSections,
+    };
+    setTeachers(prev => [newTeacher, ...prev]);
+    toast.success('Teacher added successfully');
+    setAddDialogOpen(false);
+  };
+
   return (
     <DashboardLayout role="principal" userName="Principal" userEmail="principal@collegedost.com">
       <div className="space-y-6 pb-8">
@@ -135,6 +167,10 @@ export default function TeachersPage() {
           title="Teachers"
           description="Manage teacher accounts, approvals, and assignments"
         >
+          <Button onClick={openAddDialog} className="gap-2 rounded-xl gradient-primary border-0 text-white">
+            <Plus className="h-4 w-4" />
+            Add Teacher
+          </Button>
           <Button variant="outline" className="gap-2 rounded-xl">
             <RefreshCw className="h-4 w-4" />
             Sync
@@ -193,6 +229,7 @@ export default function TeachersPage() {
                   <Users className="h-12 w-12 opacity-30" />
                   <p className="text-sm font-medium">No teachers found</p>
                   <p className="text-xs">Try adjusting your search or filters</p>
+                  <Button onClick={openAddDialog} variant="outline" className="mt-2 gap-2 rounded-xl"><Plus className="h-4 w-4" />Add Teacher</Button>
                 </div>
               ) : (
                 filtered.map((teacher, i) => (
@@ -321,6 +358,52 @@ export default function TeachersPage() {
               {confirmDialog?.type === 'disable' && 'Disable'}
               {confirmDialog?.type === 'enable' && 'Enable'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="rounded-2xl sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Add Teacher</DialogTitle>
+            <DialogDescription>Enter the new teacher details. They will receive an invitation email.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Full Name *</Label>
+              <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Teacher name" className="rounded-xl bg-background/50 h-10" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Email *</Label>
+              <Input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="teacher@college.edu" className="rounded-xl bg-background/50 h-10" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Phone</Label>
+              <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91 9876543210" className="rounded-xl bg-background/50 h-10" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Subject *</Label>
+              <Input value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} placeholder="Mathematics" className="rounded-xl bg-background/50 h-10" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Stream *</Label>
+              <Select value={form.stream} onValueChange={v => setForm({ ...form, stream: v as 'MPC' | 'BiPC' | 'CEC' })}>
+                <SelectTrigger className="h-10 rounded-xl bg-background/50"><SelectValue placeholder="Select stream" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MPC">MPC</SelectItem>
+                  <SelectItem value="BiPC">BiPC</SelectItem>
+                  <SelectItem value="CEC">CEC</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Assigned Sections</Label>
+              <Input value={form.assignedSections.join(', ')} onChange={e => setForm({ ...form, assignedSections: e.target.value ? e.target.value.split(',').map(s => s.trim()).filter(Boolean) : [] })} placeholder="MPC-A, MPC-B" className="rounded-xl bg-background/50 h-10" />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)} className="rounded-xl">Cancel</Button>
+            <Button onClick={handleAddSave} className="rounded-xl gradient-primary border-0 text-white">Add Teacher</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----- Helper Functions -----
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && request.auth.token.role == role;
+    }
+
+    function isPrincipal() {
+      return hasRole('principal');
+    }
+
+    function isTeacher() {
+      return hasRole('teacher');
+    }
+
+    function isMentor() {
+      return hasRole('mentor');
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ----- Admin / Principal Full Access -----
+
+    match /{document=**} {
+      allow read, write: if isPrincipal();
+    }
+
+    // ----- Users -----
+
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if isAuthenticated();
+      // Users can update their own profile (but not role/status)
+      allow create: if isAuthenticated();
+      allow update: if isOwner(userId);
+      // Principal can manage all users
+      allow write: if isPrincipal();
+    }
+
+    // ----- Attendance -----
+
+    match /attendance/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher() || isMentor();
+      allow update: if isPrincipal();
+    }
+
+    // ----- Leave Requests -----
+
+    match /leaveRequests/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher() || isMentor();
+      allow update: if isPrincipal();
+    }
+
+    // ----- Announcements -----
+
+    match /announcements/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal() || isTeacher();
+    }
+
+    // ----- Quizzes & Results -----
+
+    match /quizzes/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      allow update, delete: if isTeacher() || isPrincipal();
+    }
+
+    match /quizResults/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+
+    // ----- Timetables -----
+
+    match /timetables/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal();
+    }
+
+    // ----- Subjects & Sections & Streams -----
+
+    match /subjects/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal();
+    }
+
+    match /sections/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal();
+    }
+
+    match /streams/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal();
+    }
+
+    // ----- Settings -----
+
+    match /settings/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isPrincipal();
+    }
+
+    // ----- Notifications -----
+
+    match /notifications/{docId} {
+      allow read: if isOwner(docId);
+      allow write: if isAuthenticated();
+    }
+
+    // ----- Audit Logs -----
+
+    match /auditLogs/{docId} {
+      allow read: if isPrincipal();
+      allow create: if isAuthenticated();
+    }
+
+    // ----- Performance -----
+
+    match /performance/{docId} {
+      allow read: if isPrincipal() || isTeacher();
+      allow write: if isPrincipal();
+    }
+
+    // ----- Mentor Attendance -----
+
+    match /mentorAttendance/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isMentor();
+      allow update: if isPrincipal();
+    }
+
+    // ----- Login Attempts -----
+
+    match /loginAttempts/{docId} {
+      allow read, write: if isPrincipal();
+    }
+  }
+}

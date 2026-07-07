@@ -28,6 +28,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { createDocument, COLLECTIONS } from '@/lib/firebase/firestore';
+import { getSocket } from '@/lib/socket/client';
+import { SOCKET_EVENTS } from '@/lib/socket/events';
 
 // Mock data
 const todaySchedule = [
@@ -50,16 +54,37 @@ const announcements = [
 
 export default function TeacherDashboard() {
   const router = useRouter();
+  const { user } = useAuth();
   const [attendanceMarked, setAttendanceMarked] = useState(false);
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening';
-  const TEACHER_NAME = 'Dr. Ramesh Kumar';
 
-  const handleMarkAttendance = () => {
-    setAttendanceMarked(true);
-    toast.success('Attendance marked successfully! 🎉', {
-      description: 'Location: Campus (within geofence)',
-    });
+  const handleMarkAttendance = async () => {
+    const checkInTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const status = new Date().getHours() < 9 ? 'present' : 'late';
+    const dateStr = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    try {
+      await createDocument(COLLECTIONS.ATTENDANCE, {
+        teacherId: user?.uid || '',
+        teacherName: user?.displayName || 'Unknown',
+        email: user?.email || '',
+        status,
+        checkIn: checkInTime,
+        date: dateStr,
+        timestamp: new Date().toISOString(),
+      });
+
+      const socket = getSocket();
+      socket.emit(SOCKET_EVENTS.ATTENDANCE_UPDATED, { teacherName: user?.displayName, status, time: checkInTime });
+
+      setAttendanceMarked(true);
+      toast.success('Attendance marked successfully! 🎉', {
+        description: 'Location: Campus (within geofence)',
+      });
+    } catch {
+      toast.error('Failed to mark attendance. Please try again.');
+    }
   };
 
   const handleStartQuiz = () => {
@@ -67,11 +92,11 @@ export default function TeacherDashboard() {
   };
 
   return (
-    <DashboardLayout role="teacher" userName="Dr. Ramesh Kumar" userEmail="ramesh@college.edu">
+    <DashboardLayout role="teacher">
       <div className="space-y-6 pb-20 lg:pb-8">
         {/* Header */}
         <PageHeader
-          title={`${greeting}, Dr. Ramesh! 👋`}
+          title={`${greeting}, ${user?.displayName?.split(' ')[0] || 'Teacher'}! 👋`}
           description="Here's your schedule and activity for today."
         />
 

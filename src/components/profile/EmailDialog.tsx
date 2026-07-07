@@ -73,7 +73,7 @@ export function EmailDialog({ open, onOpenChange, currentEmail, userId, role }: 
 
     let allSuccess = true;
     for (const item of newEmails) {
-      setAdditional(prev => prev.map((n, i) => n.email === item.email ? { ...n, saving: true } : n));
+      setAdditional(prev => prev.map(n => n.email === item.email ? { ...n, saving: true } : n));
 
       try {
         const res = await fetch('/api/auth/add-email', {
@@ -87,14 +87,14 @@ export function EmailDialog({ open, onOpenChange, currentEmail, userId, role }: 
         if (!res.ok) {
           toast.error(data.error || `Failed to register ${item.email}`);
           allSuccess = false;
-          setAdditional(prev => prev.map((n, i) => n.email === item.email ? { ...n, saving: false } : n));
+          setAdditional(prev => prev.map(n => n.email === item.email ? { ...n, saving: false } : n));
         } else {
-          setAdditional(prev => prev.map((n, i) => n.email === item.email ? { ...n, saving: false, done: true } : n));
+          setAdditional(prev => prev.map(n => n.email === item.email ? { ...n, saving: false, done: true } : n));
         }
       } catch {
         toast.error(`Network error registering ${item.email}`);
         allSuccess = false;
-        setAdditional(prev => prev.map((n, i) => n.email === item.email ? { ...n, saving: false } : n));
+        setAdditional(prev => prev.map(n => n.email === item.email ? { ...n, saving: false } : n));
       }
     }
 
@@ -123,7 +123,7 @@ export function EmailDialog({ open, onOpenChange, currentEmail, userId, role }: 
             <Input
               value={primaryEmail}
               onChange={e => setPrimaryEmail(e.target.value)}
-              placeholder="teacher@collegedost.com"
+              placeholder={currentEmail || "teacher@collegedost.com"}
               className="rounded-xl bg-background/50 h-10"
               disabled
             />

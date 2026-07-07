@@ -12,11 +12,13 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [profile, setProfile] = useState({
-    name: 'Dr. Arvind Sharma',
-    email: 'principal@collegedost.com',
+    name: user?.displayName || '',
+    email: user?.email || '',
     phone: '+91 98765 43210',
   });
 
@@ -49,7 +51,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <DashboardLayout role="principal" userName="Principal" userEmail="principal@collegedost.com">
+    <DashboardLayout role="principal">
       <div className="space-y-6 pb-8">
         <PageHeader title="Settings" description="Manage your profile and institution configuration">
           <Button onClick={handleSave} className="gap-2 rounded-xl gradient-primary border-0 text-white shadow-lg shadow-primary/25">

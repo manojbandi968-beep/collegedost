@@ -15,6 +15,7 @@ export const principalLoginSchema = z.object({
 export const registrationSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   phone: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone number'),
   subject: z.string().min(1, 'Please select a subject'),
   stream: z.enum(['MPC', 'BiPC', 'CEC']),

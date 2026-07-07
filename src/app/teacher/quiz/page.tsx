@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -64,9 +64,11 @@ function TeacherQuizContent() {
   const [quizzes, setQuizzes] = useState<Quiz[]>(initialQuizzes);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const hasOpened = useRef(false);
 
   useEffect(() => {
-    if (searchParams.get('create') === 'true') {
+    if (searchParams.get('create') === 'true' && !hasOpened.current) {
+      hasOpened.current = true;
       setDialogOpen(true);
     }
   }, [searchParams]);

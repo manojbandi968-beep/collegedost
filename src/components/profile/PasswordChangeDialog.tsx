@@ -13,9 +13,11 @@ type Step = 'form' | 'forgot' | 'otp' | 'reset';
 interface PasswordChangeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userEmail?: string;
+  userPhone?: string;
 }
 
-export function PasswordChangeDialog({ open, onOpenChange }: PasswordChangeDialogProps) {
+export function PasswordChangeDialog({ open, onOpenChange, userEmail = 'teacher@collegedost.com', userPhone = '+91 9876543210' }: PasswordChangeDialogProps) {
   const [step, setStep] = useState<Step>('form');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -27,8 +29,8 @@ export function PasswordChangeDialog({ open, onOpenChange }: PasswordChangeDialo
 
   const [verifyMethod, setVerifyMethod] = useState<'email' | 'phone'>('email');
   const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
+  const [, setOtpSent] = useState(false);
+  const [, setOtpVerified] = useState(false);
 
   const handleClose = () => {
     setStep('form');
@@ -55,7 +57,7 @@ export function PasswordChangeDialog({ open, onOpenChange }: PasswordChangeDialo
   };
 
   const handleSendOtp = () => {
-    const target = verifyMethod === 'email' ? 'teacher@collegedost.com' : '+91 9876543210';
+    const target = verifyMethod === 'email' ? userEmail : userPhone;
     toast.success(`OTP sent to ${target}`);
     setOtpSent(true);
     setStep('otp');
@@ -200,7 +202,7 @@ export function PasswordChangeDialog({ open, onOpenChange }: PasswordChangeDialo
         {step === 'forgot' && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              We'll send a verification code to your registered email or phone number.
+              We&apos;ll send a verification code to your registered email or phone number.
             </p>
 
             <div className="grid grid-cols-2 gap-3">
@@ -213,7 +215,7 @@ export function PasswordChangeDialog({ open, onOpenChange }: PasswordChangeDialo
               >
                 <Mail className={`h-6 w-6 ${verifyMethod === 'email' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className={`text-xs font-semibold ${verifyMethod === 'email' ? 'text-primary' : 'text-muted-foreground'}`}>Email</span>
-                <span className="text-[10px] text-muted-foreground text-center">teacher@collegedost.com</span>
+                <span className="text-[10px] text-muted-foreground text-center">{userEmail}</span>
               </button>
               <button
                 type="button"
@@ -224,7 +226,7 @@ export function PasswordChangeDialog({ open, onOpenChange }: PasswordChangeDialo
               >
                 <Phone className={`h-6 w-6 ${verifyMethod === 'phone' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className={`text-xs font-semibold ${verifyMethod === 'phone' ? 'text-primary' : 'text-muted-foreground'}`}>Phone</span>
-                <span className="text-[10px] text-muted-foreground text-center">+91 9876543210</span>
+                <span className="text-[10px] text-muted-foreground text-center">{userPhone}</span>
               </button>
             </div>
 
@@ -257,7 +259,7 @@ export function PasswordChangeDialog({ open, onOpenChange }: PasswordChangeDialo
                 maxLength={6}
               />
               <p className="text-xs text-muted-foreground text-center">
-                OTP sent to {verifyMethod === 'email' ? 'teacher@collegedost.com' : '+91 9876543210'}
+                OTP sent to {verifyMethod === 'email' ? userEmail : userPhone}
               </p>
             </div>
 

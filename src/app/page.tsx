@@ -20,8 +20,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { signInWithGoogle, createSessionCookie } from '@/lib/firebase/auth';
-import { toast } from 'sonner';
+import { EmailLoginDialog } from '@/components/auth/EmailLoginDialog';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -131,7 +130,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { user, loading } = useAuth();
-  const [loadingRole, setLoadingRole] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'teacher' | 'mentor'>('teacher');
 
   useEffect(() => {
     if (!loading && user) {
@@ -139,26 +139,7 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
 
-  const handleGoogleLogin = async (role: 'teacher' | 'mentor') => {
-    try {
-      setLoadingRole(role);
-      const user = await signInWithGoogle();
-      
-      // Create session cookie
-      const success = await createSessionCookie();
-      if (success) {
-        toast.success(`Welcome back, ${user.displayName || 'User'}!`);
-        router.push(`/${role}`);
-      } else {
-        toast.error('Failed to create session. Please try again.');
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      toast.error(errorMessage);
-    } finally {
-      setLoadingRole(null);
-    }
-  };
+  // Google login is currently available via the register page
 
   return (
     <div className="auth-bg pattern-dots relative flex min-h-screen flex-col">
@@ -232,7 +213,7 @@ export default function LoginPage() {
             {/* Quotes */}
             <div className="mx-auto mt-4 max-w-md space-y-1">
               <p className="text-sm italic text-muted-foreground/80">
-                "No more WhatsApp groups."
+                &quot;No more WhatsApp groups.&quot;
               </p>
               <p className="text-sm font-medium text-primary">
                 One Platform. Every Educator Connected.
@@ -258,8 +239,10 @@ export default function LoginPage() {
               description="Access your timetable, mark attendance, and conduct quizzes"
               gradient="gradient-primary"
               iconBg="gradient-primary"
-              onClick={() => handleGoogleLogin('teacher')}
-              loading={loadingRole === 'teacher'}
+              onClick={() => {
+                setSelectedRole('teacher');
+                setEmailDialogOpen(true);
+              }}
             />
 
             {/* Mentor Login */}
@@ -269,8 +252,10 @@ export default function LoginPage() {
               description="Manage study hours, log sessions, and track student progress"
               gradient="gradient-success"
               iconBg="gradient-bipc"
-              onClick={() => handleGoogleLogin('mentor')}
-              loading={loadingRole === 'mentor'}
+              onClick={() => {
+                setSelectedRole('mentor');
+                setEmailDialogOpen(true);
+              }}
             />
 
             {/* Principal Login */}
@@ -284,8 +269,14 @@ export default function LoginPage() {
             />
           </div>
 
+          <EmailLoginDialog
+            open={emailDialogOpen}
+            onOpenChange={setEmailDialogOpen}
+            expectedRole={selectedRole}
+          />
+
           {/* Registration Link */}
-          <motion.div variants={itemVariants} className="mt-8 text-center">
+          <motion.div variants={itemVariants} className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               New teacher or mentor?{' '}
               <button

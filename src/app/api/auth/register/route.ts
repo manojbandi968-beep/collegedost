@@ -4,9 +4,9 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { fullName, email, phone, subject, stream, role } = body;
+    const { fullName, email, password, phone, subject, stream, role, status = 'pending' } = body;
 
-    if (!fullName || !email || !phone || !subject || !stream || !role) {
+    if (!fullName || !email || !password || !phone || !subject || !stream || !role) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
@@ -23,16 +23,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
     }
 
-    // Create Firebase Auth user (disabled until principal approves)
+    // Create Firebase Auth user
     let firebaseUser;
     try {
       firebaseUser = await auth.createUser({
         email,
+        password,
         displayName: fullName,
-        disabled: true,
+        disabled: false,
       });
-    } catch {
-      return NextResponse.json({ error: 'Failed to create user account' }, { status: 500 });
+    } catch (error) {
+      console.error('Firebase createUser error:', error);
+      const msg = error instanceof Error ? error.message : 'Failed to create user account';
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
 
     await auth.setCustomUserClaims(firebaseUser.uid, { role });
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
       subject,
       stream,
       role,
-      status: 'pending',
+      status: status,
       isPhoneVerified: false,
       isEmailVerified: false,
       assignedSections: [],
