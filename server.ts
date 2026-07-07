@@ -10,7 +10,7 @@ import {
 
 const dev = process.env.NODE_ENV !== 'production';
 const port = parseInt(process.env.PORT || '3000', 10);
-const hostname = process.env.HOSTNAME || 'localhost';
+const hostname = process.env.HOSTNAME || '0.0.0.0';
 
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
