@@ -20,7 +20,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { EmailLoginDialog } from '@/components/auth/EmailLoginDialog';
+import { signInWithGoogle, createSessionCookie } from '@/lib/firebase/auth';
+import { toast } from 'sonner';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -130,8 +131,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { user, loading } = useAuth();
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'teacher' | 'mentor'>('teacher');
+  const [loadingRole, setLoadingRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) {
@@ -139,7 +139,24 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
 
-  // Google login is currently available via the register page
+  const handleGoogleLogin = async (role: 'teacher' | 'mentor') => {
+    try {
+      setLoadingRole(role);
+      await signInWithGoogle();
+      const sessionCreated = await createSessionCookie();
+      if (sessionCreated) {
+        router.push(`/${role}`);
+      } else {
+        toast.error('Failed to create session. Please try again.');
+      }
+    } catch (error) {
+      console.error(error);
+      const msg = error instanceof Error ? error.message : 'Login failed';
+      toast.error(msg);
+    } finally {
+      setLoadingRole(null);
+    }
+  };
 
   return (
     <div className="auth-bg pattern-dots relative flex min-h-screen flex-col">
@@ -239,10 +256,8 @@ export default function LoginPage() {
               description="Access your timetable, mark attendance, and conduct quizzes"
               gradient="gradient-primary"
               iconBg="gradient-primary"
-              onClick={() => {
-                setSelectedRole('teacher');
-                setEmailDialogOpen(true);
-              }}
+              onClick={() => handleGoogleLogin('teacher')}
+              loading={loadingRole === 'teacher'}
             />
 
             {/* Mentor Login */}
@@ -252,10 +267,8 @@ export default function LoginPage() {
               description="Manage study hours, log sessions, and track student progress"
               gradient="gradient-success"
               iconBg="gradient-bipc"
-              onClick={() => {
-                setSelectedRole('mentor');
-                setEmailDialogOpen(true);
-              }}
+              onClick={() => handleGoogleLogin('mentor')}
+              loading={loadingRole === 'mentor'}
             />
 
             {/* Principal Login */}
@@ -268,12 +281,6 @@ export default function LoginPage() {
               onClick={() => router.push('/principal-login')}
             />
           </div>
-
-          <EmailLoginDialog
-            open={emailDialogOpen}
-            onOpenChange={setEmailDialogOpen}
-            expectedRole={selectedRole}
-          />
 
           {/* Registration Link */}
           <motion.div variants={itemVariants} className="mt-6 text-center">
