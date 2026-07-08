@@ -4,22 +4,46 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { User, Mail, Shield, KeyRound, Phone, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { User, Mail, Shield, KeyRound, Phone, Pencil, Check, X } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { PasswordChangeDialog } from '@/components/profile/PasswordChangeDialog';
 import { PhoneNumberDialog } from '@/components/profile/PhoneNumberDialog';
 import { EmailDialog } from '@/components/profile/EmailDialog';
+import { toast } from 'sonner';
 
 export default function PrincipalProfilePage() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, updateUserDisplayName } = useAuth();
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [phoneNumber] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
   const email = authUser?.email || '';
   const displayName = authUser?.displayName || 'Principal';
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleSaveName = async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      toast.error('Name cannot be empty');
+      return;
+    }
+    try {
+      await updateUserDisplayName(trimmed);
+      setEditingName(false);
+      toast.success('Name updated successfully');
+    } catch {
+      toast.error('Failed to update name');
+    }
+  };
+
+  const handleStartEdit = () => {
+    setNameInput(displayName);
+    setEditingName(true);
+  };
 
   return (
     <DashboardLayout role="principal">
@@ -47,8 +71,25 @@ export default function PrincipalProfilePage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-xl font-bold text-primary">
                     {initials}
                   </div>
-                  <div>
-                    <p className="font-medium">{displayName}</p>
+                  <div className="flex-1">
+                    {editingName ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={nameInput}
+                          onChange={e => setNameInput(e.target.value)}
+                          className="h-8 rounded-lg text-sm"
+                          autoFocus
+                          onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setEditingName(false); }}
+                        />
+                        <button onClick={handleSaveName} className="text-emerald-500 hover:text-emerald-600"><Check className="h-4 w-4" /></button>
+                        <button onClick={() => setEditingName(false)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{displayName}</p>
+                        <button onClick={handleStartEdit} className="text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
+                      </div>
+                    )}
                     <p className="text-sm text-muted-foreground capitalize">Administrator Role</p>
                   </div>
                 </div>

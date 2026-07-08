@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function TeacherSettings() {
-  const { user } = useAuth();
+  const { user, updateUserDisplayName } = useAuth();
   const [profile, setProfile] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
@@ -25,8 +25,13 @@ export default function TeacherSettings() {
     sections: ['MPC-A', 'MPC-B', 'MPC-C'],
   });
 
-  const handleSave = () => {
-    toast.success('Profile updated successfully');
+  const handleSave = async () => {
+    try {
+      await updateUserDisplayName(profile.name.trim());
+      toast.success('Profile updated successfully');
+    } catch {
+      toast.error('Failed to update profile');
+    }
   };
 
   return (

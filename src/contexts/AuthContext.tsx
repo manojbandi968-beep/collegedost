@@ -5,7 +5,7 @@
 // ============================================
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, updateProfile, type User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { type UserRole } from '@/types';
 
@@ -24,6 +24,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   setUserRole: (role: UserRole) => void;
+  updateUserDisplayName: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   error: null,
   setUserRole: () => {},
+  updateUserDisplayName: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -42,6 +44,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setUserRole = useCallback((role: UserRole) => {
     setUser((prev) => (prev ? { ...prev, role } : null));
+  }, []);
+
+  const updateUserDisplayName = useCallback(async (name: string) => {
+    const fbUser = auth.currentUser;
+    if (fbUser) {
+      await updateProfile(fbUser, { displayName: name });
+    }
+    setUser((prev) => (prev ? { ...prev, displayName: name } : null));
   }, []);
 
   useEffect(() => {
@@ -73,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, error, setUserRole }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, error, setUserRole, updateUserDisplayName }}>
       {children}
     </AuthContext.Provider>
   );
